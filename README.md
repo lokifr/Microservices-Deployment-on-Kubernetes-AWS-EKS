@@ -68,9 +68,10 @@ This project demonstrates a complete microservices architecture deployed on AWS 
 
 ```
 .
-├── backend/                # Flask API application
+├── backend/               # Flask API application
 │   ├── app.py             # Main Flask application
 │   └── Dockerfile         # Backend container image
+│   └── requirements.txt   # requirements     
 ├── frontend/              # Web UI
 │   ├── index.html         # Frontend page
 │   └── Dockerfile         # Frontend container image
