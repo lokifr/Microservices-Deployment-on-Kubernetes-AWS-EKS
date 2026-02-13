@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Microservices App</title>
+  <style>
+    :root {
+      --bg1: #0f2027;
+      --bg2: #203a43;
+      --bg3: #2c5364;
+      --panel: #ffffff;
+      --accent: #0ea5e9;
+      --accent-dark: #0284c7;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --error: #b91c1c;
+      --error-bg: #fee2e2;
+      --success: #166534;
+      --success-bg: #dcfce7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: linear-gradient(130deg, var(--bg1), var(--bg2), var(--bg3));
+      min-height: 100vh;
+      padding: 24px;
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 32px auto;
+      background: var(--panel);
+      border-radius: 14px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+      padding: 32px;
+    }
+
+    h1 {
+      margin-bottom: 6px;
+      color: #0f172a;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .section {
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    h3 { margin-bottom: 12px; }
+
+    input {
+      width: calc(50% - 8px);
+      margin: 4px;
+      padding: 11px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+    }
+
+    button {
+      margin-top: 8px;
+      padding: 11px 18px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:hover { background: var(--accent-dark); }
+
+    .user-item {
+      margin: 10px 0;
+      padding: 12px;
+      border-left: 4px solid var(--accent);
+      background: #fff;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .user-name { font-weight: 700; }
+    .user-email { color: var(--muted); margin-top: 4px; }
+
+    #status {
+      margin-bottom: 16px;
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 20px;
+    }
+
+    .error { color: var(--error); background: var(--error-bg); }
+    .success { color: var(--success); background: var(--success-bg); }
+
+    @media (max-width: 640px) {
+      input { width: 100%; margin: 5px 0; }
+      .container { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Microservices Demo</h1>
+    <p class="subtitle">Kubernetes + AWS EKS + Docker</p>
+
+    <div id="status"></div>
+
+    <div class="section">
+      <h3>Add User</h3>
+      <input type="text" id="name" placeholder="Name">
+      <input type="email" id="email" placeholder="Email">
+      <br>
+      <button onclick="addUser()">Add User</button>
+    </div>
+
+    <div class="section">
+      <h3>Users</h3>
+      <div id="users"></div>
+      <button onclick="loadUsers()">Refresh</button>
+    </div>
+  </div>
+
+  <script>
+    const BACKEND_URL = `${window.location.protocol}//${window.location.hostname}:30500`;
+
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById("status");
+      statusDiv.className = type;
+      statusDiv.textContent = message;
+      setTimeout(() => {
+        statusDiv.className = "";
+        statusDiv.textContent = "";
+      }, 3000);
+    }
+
+    async function loadUsers() {
+      const usersDiv = document.getElementById("users");
+      usersDiv.innerHTML = "<p>Loading users...</p>";
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/users`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const users = await response.json();
+
+        if (!users.length) {
+          usersDiv.innerHTML = "<p>No users yet.</p>";
+          return;
+        }
+
+        usersDiv.innerHTML = users.map(user => `
+          <div class="user-item">
+            <div>
+              <div class="user-name">${user.name}</div>
+              <div class="user-email">${user.email}</div>
+            </div>
+            <div>ID: ${user.id}</div>
+          </div>
+        `).join("");
+      } catch (err) {
+        usersDiv.innerHTML = `<div class="error">Failed to load users: ${err.message}</div>`;
+      }
+    }
+
+    async function addUser() {
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      if (!name || !email) {
+        showStatus("Name and email are required", "error");
+        return;
+      }
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/users`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        document.getElementById("name").value = "";
+        document.getElementById("email").value = "";
+        showStatus("User added", "success");
+        loadUsers();
+      } catch (err) {
+        showStatus(`Failed: ${err.message}`, "error");
+      }
+    }
+
+    document.getElementById("email").addEventListener("keypress", function (e) {
+      if (e.key === "Enter") addUser();
+    });
+
+    window.onload = loadUsers;
+  </script>
+</body>
+</html>
