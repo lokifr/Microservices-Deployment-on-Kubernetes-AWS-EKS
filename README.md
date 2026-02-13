@@ -68,22 +68,23 @@ This project demonstrates a complete microservices architecture deployed on AWS 
 
 ```
 .
-├── backend/               # Flask API application
-│   ├── app.py             # Main Flask application
-│   └── Dockerfile         # Backend container image
-│   └── requirements.txt   # requirements     
-├── frontend/              # Web UI
-│   ├── index.html         # Frontend page
-│   └── Dockerfile         # Frontend container image
-├── database/              # Database initialization
-│   └── init.sql           # MySQL schema and seed data
-└── k8s/                   # Kubernetes manifests
-    ├── 00-namespace.yaml  # Namespace definition
-    ├── 01-secret.yaml     # Database credentials
-    ├── 02-configmap.yaml  # Application configuration
-    ├── 03-mysql.yaml      # MySQL deployment & service
-    ├── 04-backend.yaml    # Backend deployment & service
-    └── 05-frontend.yaml   # Frontend deployment & service
+├── backend/                # Flask API application
+│   ├── app.py              # Main Flask application
+│   └── Dockerfile          # Backend container image
+│   └── requirements.txt    # requirements     
+├── frontend/               # Web UI
+│   ├── index.html          # Frontend page
+│   └── Dockerfile          # Frontend container image
+├── database/               # Database initialization
+│   └── init.sql            # MySQL schema and seed data
+└── k8s/                    # Kubernetes manifests
+│    ├── 00-namespace.yaml  # Namespace definition
+│    ├── 01-secret.yaml     # Database credentials
+│    ├── 02-configmap.yaml  # Application configuration
+│    ├── 03-mysql.yaml      # MySQL deployment & service
+│    ├── 04-backend.yaml    # Backend deployment & service
+│    └── 05-frontend.yaml   # Frontend deployment & service
+└──screenshots.md/          # deployment screenshots for the project
 ```
 
 
