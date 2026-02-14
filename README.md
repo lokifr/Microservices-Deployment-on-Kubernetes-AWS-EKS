@@ -15,23 +15,80 @@ This project demonstrates a complete microservices architecture deployed on AWS 
 
 ## 🏗️ Architecture
 
+
+```mermaid
+graph TB
+    subgraph Internet["🌐 Internet"]
+        User[("👤 User")]
+    end
+
+    subgraph EKS["☁️ AWS EKS Cluster"]
+        subgraph Frontend["Frontend Layer"]
+            FrontendPod["🖥️ Frontend Pod<br/>(Nginx)"]
+            FrontendSvc["📡 frontend-service<br/>NodePort: 30080"]
+        end
+
+        subgraph Backend["Backend Layer"]
+            BackendPod["⚙️ Backend Pod<br/>(Flask)"]
+            BackendSvc["📡 backend-service<br/>NodePort: 30500"]
+        end
+
+        subgraph Database["Database Layer"]
+            MySQLPod["🗄️ MySQL Pod<br/>(MySQL 8.0)"]
+            MySQLSvc["📡 mysql-service<br/>ClusterIP: 3306"]
+        end
+
+        subgraph Storage["💾 Persistent Storage"]
+            PVC["PVC<br/>(5Gi)"]
+            EBS["AWS EBS<br/>(gp2)"]
+        end
+    end
+
+    User -->|"HTTP :30080"| FrontendSvc
+    User -->|"HTTP :30500"| BackendSvc
+    FrontendSvc --> FrontendPod
+    BackendSvc --> BackendPod
+    FrontendPod -->|"API Calls"| BackendSvc
+    BackendPod -->|"SQL Queries"| MySQLSvc
+    MySQLSvc --> MySQLPod
+    MySQLPod -->|"Data Persistence"| PVC
+    PVC --> EBS
+
+    classDef frontend fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#000
+    classDef backend fill:#fff59d,stroke:#f57c00,stroke-width:2px,color:#000
+    classDef database fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    classDef storage fill:#c8e6c9,stroke:#388e3c,stroke-width:2px,color:#000
+    classDef service fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:#000
+
+    class FrontendPod frontend
+    class BackendPod backend
+    class MySQLPod database
+    class PVC,EBS storage
+    class FrontendSvc,BackendSvc,MySQLSvc service
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                         AWS EKS Cluster                     │
-│                                                             │
-│  ┌─────────────┐      ┌─────────────┐      ┌─────────────┐  │
-│  │  Frontend   │─────▶│   Backend   │─────▶│    MySQL   │  │
-│  │   (Nginx)   │      │   (Flask)   │      │   (8.0)     │  │
-│  └─────────────┘      └─────────────┘      └─────────────┘  │
-│        │                     │                     │        │
-│        ▼                     ▼                     ▼        │
-│  NodePort:30080       NodePort:30500       ClusterIP:3306   │
-│                                                   │         │
-│                                            ┌──────▼──────┐  │
-│                                            │  PVC (5Gi)  │  │
-│                                            │  EBS (gp2)  │  │
-│                                            └─────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+
+## Component Details
+
+| Component | Type | Port/Access | Description |
+|-----------|------|-------------|-------------|
+| **Frontend** | Nginx | NodePort: 30080 | Web server serving static content |
+| **Backend** | Flask | NodePort: 30500 | Python API handling business logic |
+| **Database** | MySQL 8.0 | ClusterIP: 3306 | Persistent data storage |
+| **Storage** | EBS (gp2) | 5Gi | Persistent volume for MySQL data |
+
+## Network Flow
+
+1. **User → Frontend**: External HTTP traffic on port 30080
+2. **User → Backend**: Direct API access on port 30500
+3. **Frontend → Backend**: Internal API communication
+4. **Backend → Database**: SQL queries over internal network (port 3306)
+5. **Database → Storage**: Data persisted to EBS volume via PVC
+
+## Service Types
+
+- **NodePort**: Exposes services externally (Frontend & Backend)
+- **ClusterIP**: Internal-only access (MySQL)
+- **PVC**: Persistent Volume Claim ensures data survives pod restartsce
 ```
 
 ### Components
