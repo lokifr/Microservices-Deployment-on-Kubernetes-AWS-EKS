@@ -15,57 +15,10 @@ This project demonstrates a complete microservices architecture deployed on AWS 
 
 ## 🏗️ Architecture
 
+ <img width="533" height="1573" alt="Untitled Diagram drawio (6)" src="https://github.com/user-attachments/assets/02e9ea93-280f-4740-9d93-118fe138881c" />
 
-```mermaid
-graph TB
-    subgraph Internet["🌐 Internet"]
-        User[("👤 User")]
-    end
 
-    subgraph EKS["☁️ AWS EKS Cluster"]
-        subgraph Frontend["Frontend Layer"]
-            FrontendPod["🖥️ Frontend Pod<br/>(Nginx)"]
-            FrontendSvc["📡 frontend-service<br/>NodePort: 30080"]
-        end
-
-        subgraph Backend["Backend Layer"]
-            BackendPod["⚙️ Backend Pod<br/>(Flask)"]
-            BackendSvc["📡 backend-service<br/>NodePort: 30500"]
-        end
-
-        subgraph Database["Database Layer"]
-            MySQLPod["🗄️ MySQL Pod<br/>(MySQL 8.0)"]
-            MySQLSvc["📡 mysql-service<br/>ClusterIP: 3306"]
-        end
-
-        subgraph Storage["💾 Persistent Storage"]
-            PVC["PVC<br/>(5Gi)"]
-            EBS["AWS EBS<br/>(gp2)"]
-        end
-    end
-
-    User -->|"HTTP :30080"| FrontendSvc
-    User -->|"HTTP :30500"| BackendSvc
-    FrontendSvc --> FrontendPod
-    BackendSvc --> BackendPod
-    FrontendPod -->|"API Calls"| BackendSvc
-    BackendPod -->|"SQL Queries"| MySQLSvc
-    MySQLSvc --> MySQLPod
-    MySQLPod -->|"Data Persistence"| PVC
-    PVC --> EBS
-
-    classDef frontend fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#000
-    classDef backend fill:#fff59d,stroke:#f57c00,stroke-width:2px,color:#000
-    classDef database fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    classDef storage fill:#c8e6c9,stroke:#388e3c,stroke-width:2px,color:#000
-    classDef service fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:#000
-
-    class FrontendPod frontend
-    class BackendPod backend
-    class MySQLPod database
-    class PVC,EBS storage
-    class FrontendSvc,BackendSvc,MySQLSvc service
-```
+ 
 
 ## Component Details
 
