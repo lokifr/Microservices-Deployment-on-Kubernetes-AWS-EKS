@@ -42,7 +42,6 @@ This project demonstrates a complete microservices architecture deployed on AWS 
 - **NodePort**: Exposes services externally (Frontend & Backend)
 - **ClusterIP**: Internal-only access (MySQL)
 - **PVC**: Persistent Volume Claim ensures data survives pod restartsce
-```
 
 ### Components
 
