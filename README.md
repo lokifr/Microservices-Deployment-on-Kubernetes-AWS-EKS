@@ -96,6 +96,169 @@ This project demonstrates a complete microservices architecture deployed on AWS 
 └──screenshots.md/          # deployment screenshots for the project
 ```
 
+## 📋 Prerequisites
 
+- **AWS Account** with EKS cluster access
+- **Docker Hub Account** for image storage
+- **Tools Installed**:
+  - [AWS CLI](https://aws.amazon.com/cli/)
+  - [eksctl](https://eksctl.io/)
+  - [kubectl](https://kubernetes.io/docs/tasks/tools/)
+  - [Docker](https://www.docker.com/)
+
+## 🚀 Quick Start
+
+### 1️⃣ Build and Push Docker Images
+
+Replace `YOUR_DOCKERHUB_USERNAME` with your actual Docker Hub username.
+
+```bash
+# Build and push backend
+cd backend
+docker build -t YOUR_DOCKERHUB_USERNAME/microservices-backend:v1 .
+docker push YOUR_DOCKERHUB_USERNAME/microservices-backend:v1
+cd ..
+
+# Build and push frontend
+cd frontend
+docker build -t YOUR_DOCKERHUB_USERNAME/microservices-frontend:v1 .
+docker push YOUR_DOCKERHUB_USERNAME/microservices-frontend:v1
+cd ..
+```
+
+### 2️⃣ Update Image Names in Manifests
+
+**PowerShell:**
+```powershell
+(Get-Content k8s/04-backend.yaml) -replace 'YOUR_DOCKERHUB_USERNAME','<your-username>' | Set-Content k8s/04-backend.yaml
+(Get-Content k8s/05-frontend.yaml) -replace 'YOUR_DOCKERHUB_USERNAME','<your-username>' | Set-Content k8s/05-frontend.yaml
+```
+
+**Bash/Linux:**
+```bash
+sed -i 's/YOUR_DOCKERHUB_USERNAME/<your-username>/g' k8s/04-backend.yaml
+sed -i 's/YOUR_DOCKERHUB_USERNAME/<your-username>/g' k8s/05-frontend.yaml
+```
+
+## 🎯 Deployment
+
+Deploy all components to your EKS cluster in the correct order:
+
+```bash
+# Apply Kubernetes manifests
+kubectl apply -f k8s/00-namespace.yaml
+kubectl apply -f k8s/01-secret.yaml
+kubectl apply -f k8s/02-configmap.yaml
+kubectl apply -f k8s/03-mysql.yaml
+kubectl apply -f k8s/04-backend.yaml
+kubectl apply -f k8s/05-frontend.yaml
+```
+
+## ✅ Verification
+
+Check the deployment status:
+
+```bash
+# Check all resources
+kubectl get all -n microservices
+
+# Check pods
+kubectl get pods -n microservices
+
+# Check services
+kubectl get svc -n microservices
+
+# Check persistent volumes
+kubectl get pvc -n microservices
+```
+
+### Expected Output
+
+- ✅ All pods in `Running` state
+- ✅ `frontend-service` exposed on NodePort `30080`
+- ✅ `backend-service` exposed on NodePort `30500`
+- ✅ `mysql-pvc` status: `Bound`
+
+## 🌐 Access
+
+### Get Node Public IP
+
+```bash
+kubectl get nodes -o wide
+```
+
+### Application URLs
+
+- **Frontend**: `http://<NODE_PUBLIC_IP>:30080`
+- **Backend API**: `http://<NODE_PUBLIC_IP>:30500/api/users`
+
+### Alternative: Port-Forward (If Security Group Blocks NodePort)
+
+```bash
+# Forward frontend
+kubectl port-forward -n microservices svc/frontend-service 8080:80
+
+# Forward backend (in another terminal)
+kubectl port-forward -n microservices svc/backend-service 30500:5000
+```
+
+Then access:
+- **Frontend**: `http://localhost:8080`
+- **Backend API**: `http://localhost:30500/api/users`
+
+## 🔧 Troubleshooting
+
+### MySQL Pod Stuck in Pending
+
+Check PVC and StorageClass:
+
+```bash
+kubectl get pvc -n microservices
+kubectl get storageclass
+```
+
+**Solution**: Ensure `storageClassName: gp2` is set in `k8s/03-mysql.yaml` and re-apply:
+
+```bash
+kubectl delete -f k8s/03-mysql.yaml
+kubectl apply -f k8s/03-mysql.yaml
+```
+
+### Pods CrashLoopBackOff
+
+Check logs:
+
+```bash
+kubectl logs -n microservices <pod-name>
+kubectl describe pod -n microservices <pod-name>
+```
+
+### Service Not Accessible
+
+1. Verify security group allows NodePort traffic (30000-32767)
+2. Check pod health:
+   ```bash
+   kubectl get pods -n microservices -o wide
+   ```
+3. Test service internally:
+   ```bash
+   kubectl run -it --rm debug --image=busybox --restart=Never -n microservices -- sh
+   # Inside the pod:
+   wget -O- http://backend-service:5000/api/users
+   ```
+
+## 🧹 Cleanup
+
+Delete the entire EKS cluster and all resources:
+
+```bash
+eksctl delete cluster --name microservices-cluster --region us-east-1
+```
+
+Or delete only the application resources:
+
+```bash
+kubectl delete namespace microservices
+```
 
 ## Documentation formatting and structure assisted by AI tools
